@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plant Disease Classification</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        .container {
+            margin-top: 50px;
+        }
+        .image-section {
+            display: none;
+        }
+        .loader {
+            display: none;
+            border: 4px solid transparent;
+            border-top: 4px solid #3498db;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 20px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2 class="text-center">Plant Disease Classification Using Deep Learning</h2><br>
+
+        <form id="upload-file" method="post" enctype="multipart/form-data">
+            <div class="form-group">
+                <input type="file" name="file" class="form-control-file" id="imageUpload" accept=".png, .jpg, .jpeg" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Upload and Predict</button>
+        </form>
+
+        <div class="image-section">
+            <br><img id="imagePreview" class="img-fluid" src="#" alt="Uploaded Image" style="max-width: 300px;">
+            <div id="result" style="margin-top: 20px;">
+                <h3>Prediction: <span id="prediction"></span></h3>
+            </div>
+        </div>
+
+        <div class="loader" id="loader"></div>
+
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("#upload-file").submit(function(event) {
+                event.preventDefault();
+                var formData = new FormData(this);
+                $("#loader").show();  // Show the loader
+                $("#prediction").text("");  // Clear previous predictions
+                $(".image-section").hide();  // Hide previous image and result
+
+                $.ajax({
+                    url: '/predict',
+                    type: 'POST',
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function(response) {
+                        $("#loader").hide();  // Hide the loader
+                        if (response.prediction) {
+                            $("#prediction").text(response.prediction);
+                            $(".image-section").show();  // Show the uploaded image and prediction
+                        } else {
+                            alert("Error: " + response.error);
+                        }
+                    },
+                    error: function(xhr, status, error) {
+                        $("#loader").hide();
+                        alert("An error occurred: " + error);
+                    }
+                });
+            });
+
+            $("#imageUpload").change(function() {
+                var reader = new FileReader();
+                reader.onload = function(e) {
+                    $('#imagePreview').attr('src', e.target.result);
+                    $(".image-section").show();  // Show image preview
+                };
+                reader.readAsDataURL(this.files[0]);
+            });
+        });
+    </script>
+</body>
+</html>
